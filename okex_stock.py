@@ -90,6 +90,7 @@ while True:
                             'unitAmount': d['unitAmount'],
                             'createDate': d['createDate'],
                             'status': json.loads(res)['data']['status'],
+                            'id': int(d['createDate']+d['amount']+d['price']),
                         }
                         logging.info(dic)
                         producer.send('stock-dev', [dic])
