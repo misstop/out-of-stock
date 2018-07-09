@@ -91,7 +91,7 @@ def request_con(url, data=None):
 # kafka连接(topic: stock-dev)
 def kafka_con():
     global producer
-    producer = KafkaProducer(bootstrap_servers='47.75.116.175:9092',
+    producer = KafkaProducer(bootstrap_servers=['47.75.33.177:9092', '47.75.176.97:9092', '47.75.170.254:9092'],
                              value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
 """                 返回的json如下所示：
@@ -173,7 +173,7 @@ while True:
                         }
                         #logging.info('插入一条数据%s' % dic)
                         #print('插入一条数据%s' % dic)
-                        producer.send('stock-test', [dic])
+                        producer.send('stock-prod', [dic])
                 time.sleep(1)
         now = datetime.datetime.now()
         fTime = now.strftime("%Y-%m-%d %H:%M:%S")
