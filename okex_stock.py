@@ -91,8 +91,11 @@ def request_con(url, data=None):
 # kafka连接(topic: stock-dev)
 def kafka_con():
     global producer
-    producer = KafkaProducer(bootstrap_servers=['47.75.33.177:9092', '47.75.176.97:9092', '47.75.170.254:9092'],
-                             value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+    producer = KafkaProducer(
+        # bootstrap_servers=['47.75.33.177:9092', '47.75.176.97:9092', '47.75.170.254:9092'],
+        bootstrap_servers='47.75.116.175:9092',
+        value_serializer=lambda v: json.dumps(v).encode('utf-8')
+    )
 
 """                 返回的json如下所示：
 {'msg': 'success',
@@ -145,7 +148,7 @@ while True:
         contract_ls = get_contract()
         for st in status_ls:
             for _ in contract_ls:
-                res = request_con(detail_url, data={'status': st, 'contractId': _, 'pageLength': 100})
+                res = request_con(detail_url, data={'status': st, 'contractId': _, 'pageLength': 10000})
                 detail = json.loads(res)['data']['futureContractOrdersList']
                 # print(res)
                 if detail is None:
@@ -173,7 +176,7 @@ while True:
                         }
                         #logging.info('插入一条数据%s' % dic)
                         #print('插入一条数据%s' % dic)
-                        producer.send('stock-prod', [dic])
+                        producer.send('stock-test', [dic])
                 time.sleep(1)
         now = datetime.datetime.now()
         fTime = now.strftime("%Y-%m-%d %H:%M:%S")
