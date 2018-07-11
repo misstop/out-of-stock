@@ -81,6 +81,13 @@ def cur_time():
     return t2
 
 
+# 时间戳转换为时间
+def str_time():
+    now = datetime.datetime.now()
+    str_time = now.strftime("%Y-%m-%d %H:%M:%S")
+    return str_time
+
+
 # request连接
 def request_con(url, data=None):
     header = {'content-type': 'application/x-www-form-urlencoded; charset=UTF-8'}
@@ -148,8 +155,10 @@ while True:
         contract_ls = get_contract()
         for st in status_ls:
             for _ in contract_ls:
+                logging.info('请求的status为%s，contractId为%s，--%s' % (st, _, str_time()))
                 res = request_con(detail_url, data={'status': st, 'contractId': _, 'pageLength': 10000})
                 detail = json.loads(res)['data']['futureContractOrdersList']
+                logging.info('返回数据的status为%s，contractId为%s，--%s' % (st, _, str_time()))
                 # print(res)
                 if detail is None:
                     logging.info("contractId为%s，status为%s的请求没有数据" % (_, st))
