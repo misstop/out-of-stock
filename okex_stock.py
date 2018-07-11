@@ -1,6 +1,6 @@
-import time, datetime
+import time, datetime, os
 import json, requests
-import logging
+import logging, yaml
 
 from kafka import KafkaProducer
 from collections import defaultdict
@@ -73,6 +73,12 @@ contract_url = 'https://www.okex.com/v2/futures/pc/queryInfo/contractInfo.do'
 # 获取爆仓数据的地址
 detail_url = 'https://www.okex.com/v2/futures/pc/public/blastingOrders.do'
 
+# 读取yaml配置
+cur_path = os.path.dirname(os.path.realpath(__file__))
+x = yaml.load(open('%s/config.yml' % cur_path))
+HOST = x['QUEUES']['KAFKA']['HOST']
+kafka_topic = x['QUEUES']['KAFKA']['ticker_topic']
+
 
 # 服务器时间13位
 def cur_time():
@@ -100,7 +106,7 @@ def kafka_con():
     global producer
     producer = KafkaProducer(
         # bootstrap_servers=['47.75.33.177:9092', '47.75.176.97:9092', '47.75.170.254:9092'],
-        bootstrap_servers='47.75.116.175:9092',
+        bootstrap_servers=HOST,
         value_serializer=lambda v: json.dumps(v).encode('utf-8')
     )
 
@@ -149,16 +155,17 @@ def get_contract():
 
 # 循环爬取
 i = 0
+m = 0
 kafka_con()
 while True:
     try:
         contract_ls = get_contract()
         for st in status_ls:
             for _ in contract_ls:
-                logging.info('请求的status为%s，contractId为%s，--%s' % (st, _, str_time()))
+                logging.info('请求的status为%s，contractId为%s' % (st, _))
                 res = request_con(detail_url, data={'status': st, 'contractId': _, 'pageLength': 400})
                 detail = json.loads(res)['data']['futureContractOrdersList']
-                logging.info('返回数据的status为%s，contractId为%s，--%s' % (st, _, str_time()))
+                logging.info('返回数据的status为%s，contractId为%s' % (st, _))
                 # print(res)
                 if detail is None:
                     logging.info("contractId为%s，status为%s的请求没有数据" % (_, st))
@@ -185,13 +192,16 @@ while True:
                         }
                         #logging.info('插入一条数据%s' % dic)
                         #print('插入一条数据%s' % dic)
-                        producer.send('stock-test', [dic])
+                        m += 1
+                        producer.send(kafka_topic, [dic])
                 time.sleep(1)
         now = datetime.datetime.now()
         fTime = now.strftime("%Y-%m-%d %H:%M:%S")
         i += 1
-        producer.send('stock-test', [{"coin": "OutOfStockIsEnd"}])
+        producer.send(kafka_topic, [{"coin": "OutOfStockIsEnd"}])
         print("第%s次执行完毕----%s" % (i, fTime))
+        print("发送了%s条" % m)
+        m = 0
         logging.info("第%s次执行完毕----%s" % (i, fTime))
         time.sleep(20)
     except Exception as e:
