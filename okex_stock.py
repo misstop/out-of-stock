@@ -156,7 +156,7 @@ while True:
         for st in status_ls:
             for _ in contract_ls:
                 logging.info('请求的status为%s，contractId为%s，--%s' % (st, _, str_time()))
-                res = request_con(detail_url, data={'status': st, 'contractId': _, 'pageLength': 10000})
+                res = request_con(detail_url, data={'status': st, 'contractId': _, 'pageLength': 400})
                 detail = json.loads(res)['data']['futureContractOrdersList']
                 logging.info('返回数据的status为%s，contractId为%s，--%s' % (st, _, str_time()))
                 # print(res)
@@ -190,6 +190,7 @@ while True:
         now = datetime.datetime.now()
         fTime = now.strftime("%Y-%m-%d %H:%M:%S")
         i += 1
+        producer.send('stock-test', [{"coin": "OutOfStockIsEnd"}])
         print("第%s次执行完毕----%s" % (i, fTime))
         logging.info("第%s次执行完毕----%s" % (i, fTime))
         time.sleep(20)
